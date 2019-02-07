@@ -38,14 +38,16 @@ router.post('/register',(req,res)=>{
         User.findOne({email:email}) //mongoose to find data
             .then(user =>{
                 if(user){ //find if the particular email is existing
-                    errors.push({msg: 'Email is already taken'});
-                    res.render('register',{
+                    //errors.push({msg: 'Email is already taken'});
+                    req.flash('error_msg','Email already taken.')
+                    /*res.render('register',{
                         errors,
                         name,
                         email,
                         password,
                         confirm_password
-                    });
+                    }); */
+                    res.redirect('/users/register');
                 }else{
                     const newUser = new User({ //make a new User model
                         name,
@@ -63,6 +65,7 @@ router.post('/register',(req,res)=>{
                         //save user
                         newUser.save()
                             .then(user =>{
+                                req.flash('success_msg','You are registered.Now you can logged in.')
                                 res.redirect('/users/login');
                             })
                             .catch(err => console.log(err));    

@@ -31,6 +31,12 @@ app.use(session({
 //Connect flash
 app.use(flash());
 
+app.use((req,res,next)=>{
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    next();
+});
+
 //routes
 app.use('/',require('./routes/index')); //index
 app.use('/users',require('./routes/users'));//login and register
