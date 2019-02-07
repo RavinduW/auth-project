@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router(); //using express routers
+const bcrypt = require('bcryptjs');
+
+const User = require('../models/User'); //User model
 
 //login route
 router.get('/login',(req,res)=>res.render('login'));
@@ -17,7 +20,7 @@ router.post('/register',(req,res)=>{
     }
 
     //check the password length
-    if(password.length < 6){
+    if(password.length < 6 && password.length>0){
         errors.push({msg: 'Password should be at least 6 characters'});
     } 
 
@@ -31,8 +34,44 @@ router.post('/register',(req,res)=>{
         res.render('register',{
             errors,name,email,password,confirm_password
         });
-    }else{
-        res.send('pass');
+    }else{ //no validation errors
+        User.findOne({email:email}) //mongoose to find data
+            .then(user =>{
+                if(user){ //find if the particular email is existing
+                    errors.push({msg: 'Email is already taken'});
+                    res.render('register',{
+                        errors,
+                        name,
+                        email,
+                        password,
+                        confirm_password
+                    });
+                }else{
+                    const newUser = new User({ //make a new User model
+                        name,
+                        email,
+                        password
+                    }); 
+
+                    //hashing the password
+                    bcrypt.genSalt(10,(err,salt)=>bcrypt.hash(newUser.password, salt, (err, hash)=>{
+                        if(err) throw err;
+
+                        //set password to hashed
+                        newUser.password = hash;
+
+                        //save user
+                        newUser.save()
+                            .then(user =>{
+                                res.redirect('/users/login');
+                            })
+                            .catch(err => console.log(err));    
+                    }));
+
+                    console.log('New User is registered');
+                }
+            });
+        
     }
 });
 
