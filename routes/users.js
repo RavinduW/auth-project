@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router(); //using express routers
 const bcrypt = require('bcryptjs');
+const passport = require('passport');
 
 const User = require('../models/User'); //User model
 
@@ -34,20 +35,20 @@ router.post('/register',(req,res)=>{
         res.render('register',{
             errors,name,email,password,confirm_password
         });
+
+        //res.redirect('/users/register');
     }else{ //no validation errors
         User.findOne({email:email}) //mongoose to find data
             .then(user =>{
                 if(user){ //find if the particular email is existing
-                    //errors.push({msg: 'Email is already taken'});
-                    req.flash('error_msg','Email already taken.')
-                    /*res.render('register',{
+                    errors.push({msg: 'Email is already taken'});
+                    res.render('register',{
                         errors,
                         name,
                         email,
                         password,
                         confirm_password
-                    }); */
-                    res.redirect('/users/register');
+                    }); 
                 }else{
                     const newUser = new User({ //make a new User model
                         name,
@@ -76,6 +77,15 @@ router.post('/register',(req,res)=>{
             });
         
     }
+});
+
+//login
+router.post('/login',(req,res,next)=>{
+    passport.authenticate('local',{
+        successRedirect: '/dashboard',
+        failureRedirect: '/users/login',
+        failureFlash:true
+    })(req,res,next);
 });
 
 module.exports = router;
